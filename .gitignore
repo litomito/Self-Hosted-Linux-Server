@@ -1,0 +1,30 @@
+# OS / editor
+.DS_Store
+*.swp
+
+# env / secrets
+.env
+.env.*
+*.key
+*.pem
+
+# logs
+*.log
+docs/incidents/*.zip
+docs/incidents/*.tar.gz
+
+# Node / Next
+node_modules/
+.next/
+out/
+dist/
+
+# Docker
+**/.dockerignore
+
+# misc
+tmp/
+
+# Python
+venv/
+**/venv/
