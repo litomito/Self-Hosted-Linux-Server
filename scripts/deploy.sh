@@ -22,7 +22,17 @@ if [[ -z "$APP_VERSION" ]]; then
 fi
 
 export APP_VERSION
+
+GIT_TAG="$(git -C "$ROOT_DIR" tag --points-at HEAD | tail -n 1 || true)"
+GIT_COMMIT="$(git -C "$ROOT_DIR" rev-parse --short HEAD || true)"
+
 echo "Deploy version: $APP_VERSION"
+
+if [[ -n "$GIT_TAG" ]]; then
+  echo "Git tag:        $GIT_TAG"
+else
+  echo "Git commit:     $GIT_COMMIT"
+fi
 
 # Health endpoints via host-port (så vi kan testa slotten utan att Nginx pekar dit)
 BLUE_HEALTH_URL="http://localhost:3001/health"
@@ -104,7 +114,7 @@ docker compose -f "$COMPOSE_FILE" build "$INACTIVE_SVC"
 
 # 2) Starta/recreate endast den inaktiva slotten
 # --no-deps: starta inte om nginx etc
-docker compose -f "$COMPOSE_FILE" up -d --no-deps "$INACTIVE_SVC"
+docker compose -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$INACTIVE_SVC"
 
 # 3) Vänta på att den nya slotten blir frisk
 if wait_for_health "$INACTIVE_HEALTH"; then

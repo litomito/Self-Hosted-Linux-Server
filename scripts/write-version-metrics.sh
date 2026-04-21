@@ -20,10 +20,16 @@ if [[ -z "$APP_VERSION" ]]; then
   exit 1
 fi
 
+GIT_TAG="$(git -C "$ROOT_DIR" tag --points-at HEAD | tail -n 1 || true)"
+GIT_COMMIT="$(git -C "$ROOT_DIR" rev-parse --short HEAD || true)"
+
 cat > "$METRICS_FILE" <<EOF
 # HELP platform_version_info Current platform version from VERSION file
 # TYPE platform_version_info gauge
 platform_version_info{version="$APP_VERSION"} 1
+# HELP platform_git_info Current git metadata for deployed platform version
+# TYPE platform_git_info gauge
+platform_git_info{version="$APP_VERSION",git_tag="$GIT_TAG",git_commit="$GIT_COMMIT"} 1
 EOF
 
 echo "Wrote version metrics to $METRICS_FILE"

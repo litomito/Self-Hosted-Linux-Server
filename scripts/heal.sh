@@ -30,6 +30,14 @@ platform_version() {
   fi
 }
 
+git_tag() {
+git -C "$ROOT_DIR" tag --points-at HEAD | tail -n 1 || true
+}
+
+git_commit() {
+git -C "$ROOT_DIR" rev-parse --short HEAD || true
+}
+
 active_slot() {
   if grep -q "upstream_green.conf" "$ACTIVE_FILE"; then
     echo "green"
@@ -95,9 +103,11 @@ log_incident() {
   ts="$(timestamp)"
   file="$INCIDENT_DIR/incident-${ts//:/-}-${service}.log"
 
-  cat > "$file" <<EOF
+cat > "$file" <<EOF
 timestamp: $ts
 platform_version: $(platform_version)
+git_tag: $(git_tag)
+git_commit: $(git_commit)
 service: $service
 slot: $slot
 event: $event
