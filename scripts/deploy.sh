@@ -6,7 +6,23 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="$ROOT_DIR/infra/compose/docker-compose.yml"
 ACTIVE_FILE="$ROOT_DIR/infra/nginx/active_upstream.conf"
 WRITE_DEPLOY_METRICS="$ROOT_DIR/scripts/write-deploy-metrics.sh"
+WRITE_VERSION_METRICS="$ROOT_DIR/scripts/write-version-metrics.sh"
+VERSION_FILE="$ROOT_DIR/VERSION"
 
+if [[ ! -f "$VERSION_FILE" ]]; then
+  echo "ERROR: VERSION file not found at $VERSION_FILE"
+  exit 1
+fi
+
+APP_VERSION="$(tr -d '[:space:]' < "$VERSION_FILE")"
+
+if [[ -z "$APP_VERSION" ]]; then
+  echo "ERROR: VERSION file is empty"
+  exit 1
+fi
+
+export APP_VERSION
+echo "Deploy version: $APP_VERSION"
 
 # Health endpoints via host-port (så vi kan testa slotten utan att Nginx pekar dit)
 BLUE_HEALTH_URL="http://localhost:3001/health"
@@ -95,6 +111,7 @@ if wait_for_health "$INACTIVE_HEALTH"; then
   echo "Switching traffic to $INACTIVE..."
   "$ROOT_DIR/scripts/switch.sh" "$INACTIVE"
   "$WRITE_DEPLOY_METRICS" success
+  "$WRITE_VERSION_METRICS"
 
   echo "Deploy complete ✅ (active is now $INACTIVE)"
 else

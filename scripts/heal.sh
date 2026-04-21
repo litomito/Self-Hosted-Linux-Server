@@ -6,8 +6,10 @@ COMPOSE_FILE="$ROOT_DIR/infra/compose/docker-compose.yml"
 ACTIVE_FILE="$ROOT_DIR/infra/nginx/active_upstream.conf"
 INCIDENT_DIR="$ROOT_DIR/docs/incidents"
 STATE_DIR="$ROOT_DIR/.state"
+VERSION_FILE="$ROOT_DIR/VERSION"
 
 mkdir -p "$INCIDENT_DIR" "$STATE_DIR"
+chmod 755 "$STATE_DIR" 2>/dev/null || true
 
 BLUE_HEALTH_URL="http://localhost:3001/health"
 GREEN_HEALTH_URL="http://localhost:3002/health"
@@ -18,6 +20,14 @@ COOLDOWN_SECONDS=20
 
 timestamp() {
   date +"%Y-%m-%dT%H:%M:%S%z"
+}
+
+platform_version() {
+  if [[ -f "$VERSION_FILE" ]]; then
+    tr -d '[:space:]' < "$VERSION_FILE"
+  else
+    echo "unknown"
+  fi
 }
 
 active_slot() {
@@ -87,6 +97,7 @@ log_incident() {
 
   cat > "$file" <<EOF
 timestamp: $ts
+platform_version: $(platform_version)
 service: $service
 slot: $slot
 event: $event
@@ -151,7 +162,16 @@ main() {
   slot="$(slot_for_service "$service")"
   active="$(active_slot)"
   inactive="$(inactive_slot)"
-  other_service="$(service_name_for_slot "$inactive")"
+	
+  if [[ "$slot" == "blue" ]]; then
+	other_slot="green"
+  else
+	other_slot="blue"
+  fi
+
+  other_service="$(service_name_for_slot "$other_slot")"
+
+  
 
   echo "[heal] event=$event service=$service slot=$slot active=$active inactive=$inactive"
 
