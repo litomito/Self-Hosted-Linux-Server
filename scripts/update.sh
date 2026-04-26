@@ -124,8 +124,29 @@ echo "Tag:     $(current_tag)"
 
 echo
 echo "Running deploy for $LATEST_TAG..."
-"$DEPLOY_SCRIPT"
 
-echo
-echo "Platform update deployed ✅"
-echo "Active release should now be: $LATEST_TAG"
+if "$DEPLOY_SCRIPT"; then
+  echo
+  echo "Platform update deployed ✅"
+  echo "Active release should now be: $LATEST_TAG"
+else
+  echo
+  echo "Deploy failed ❌"
+  echo "Starting rollback..."
+
+  if [[ -n "$PREVIOUS_TAG" ]]; then
+    echo "Rolling back to previous tag: $PREVIOUS_TAG"
+    git checkout "$PREVIOUS_TAG"
+  else
+    echo "Rolling back to previous commit: ${PREVIOUS_COMMIT:0:7}"
+    git checkout "$PREVIOUS_COMMIT"
+  fi
+
+  echo
+  echo "Running deploy for rollback..."
+  "$DEPLOY_SCRIPT"
+
+  echo
+  echo "Rollback complete 🔁"
+  exit 1
+fi
