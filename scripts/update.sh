@@ -31,6 +31,31 @@ tag_commit() {
   git rev-list -n 1 "$tag"
 }
 
+verify_platform_health() {
+  local expected_version="$1"
+  local response
+
+  echo
+  echo "Verifying platform health via Nginx..."
+
+  response="$(curl -fsS --max-time 5 http://localhost/health || true)"
+
+  if [[ -z "$response" ]]; then
+    echo "Health check failed: no response ❌"
+    return 1
+  fi
+
+  echo "Response: $response"
+
+  if echo "$response" | grep -q "\"version\":\"$expected_version\""; then
+    echo "Health verification OK ✅"
+    return 0
+  fi
+
+  echo "Health verification FAILED ❌"
+  return 1
+}
+
 preflight_checks() {
   echo
   echo "Running preflight checks..."
@@ -127,7 +152,7 @@ echo "Tag:     $(current_tag)"
 echo
 echo "Running deploy for $LATEST_TAG..."
 
-if "$DEPLOY_SCRIPT"; then
+if "$DEPLOY_SCRIPT" && verify_platform_health "$(current_version)"; then
   echo
   echo "Platform update deployed ✅"
   echo "Active release should now be: $LATEST_TAG"
@@ -139,7 +164,7 @@ if "$DEPLOY_SCRIPT"; then
   fi
 else
   echo
-  echo "Deploy failed ❌"
+  echo "Deploy or health verification failed ❌"
   echo "Starting rollback..."
 
   if [[ -n "$PREVIOUS_TAG" ]]; then
@@ -156,5 +181,12 @@ else
 
   echo
   echo "Rollback complete 🔁"
+
+  if [[ -n "$START_BRANCH" ]]; then
+    echo
+    echo "Returning to branch: $START_BRANCH"
+    git switch -f "$START_BRANCH"
+  fi
+
   exit 1
 fi
