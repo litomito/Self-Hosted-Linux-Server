@@ -30,3 +30,5 @@ venv/
 **/venv/
 
 .state/
+
+infra/nginx/active_upstream.conf
