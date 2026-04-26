@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="$ROOT_DIR/infra/compose/docker-compose.yml"
 ACTIVE_FILE="$ROOT_DIR/infra/nginx/active_upstream.conf"
 INCIDENT_DIR="$ROOT_DIR/docs/incidents"
-STATE_DIR="$ROOT_DIR/.state"
+STATE_DIR="/var/lib/self-healing-linux/state"
 VERSION_FILE="$ROOT_DIR/VERSION"
 
 mkdir -p "$INCIDENT_DIR" "$STATE_DIR"
