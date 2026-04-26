@@ -24,6 +24,11 @@ latest_tag() {
   git tag --sort=-v:refname | head -n 1
 }
 
+tag_commit() {
+  local tag="$1"
+  git rev-list -n 1 "$tag"
+}
+
 preflight_checks() {
   echo
   echo "Running preflight checks..."
@@ -75,6 +80,23 @@ fi
 
 echo "Latest tag:      $LATEST_TAG"
 
+CURRENT_COMMIT_FULL="$(git rev-parse HEAD)"
+LATEST_TAG_COMMIT="$(tag_commit "$LATEST_TAG")"
+
+echo "Latest commit:   ${LATEST_TAG_COMMIT:0:7}"
+
+if [[ "$CURRENT_COMMIT_FULL" == "$LATEST_TAG_COMMIT" ]]; then
+  echo
+  echo "Already up to date ✅"
+  echo "No update needed."
+  exit 0
+fi
+
 echo
-echo "Update check complete."
-echo "No changes were made in this step."
+echo "Update available:"
+echo "Current commit:  ${CURRENT_COMMIT_FULL:0:7}"
+echo "Target tag:      $LATEST_TAG"
+echo "Target commit:   ${LATEST_TAG_COMMIT:0:7}"
+
+echo
+echo "No update was performed in this step."
