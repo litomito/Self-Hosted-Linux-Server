@@ -102,8 +102,8 @@ echo "Active slot:   $ACTIVE"
 echo "Inactive slot: $INACTIVE"
 echo "Deploying to:  $INACTIVE_SVC"
 
-APP_VERSION="$APP_VERSION" docker compose -f "$COMPOSE_FILE" build "$INACTIVE_SVC"
-APP_VERSION="$APP_VERSION" docker compose -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$INACTIVE_SVC"
+APP_VERSION="$APP_VERSION" docker compose --project-directory "$ROOT_DIR/infra/compose" -f "$COMPOSE_FILE" build "$INACTIVE_SVC"
+APP_VERSION="$APP_VERSION" docker compose --project-directory "$ROOT_DIR/infra/compose" -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$INACTIVE_SVC"
 
 if wait_for_health "$INACTIVE_HEALTH"; then
   echo "Switching traffic to $INACTIVE..."

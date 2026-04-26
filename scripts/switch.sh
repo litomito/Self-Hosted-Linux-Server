@@ -23,7 +23,7 @@ set_active() {
 
 # Reload Nginx inuti nginx-containern så den läser nya active_upstream.conf
 reload_nginx() {
-  docker exec nginx nginx -s reload
+  docker compose -f "$ROOT_DIR/infra/compose/docker-compose.yml" restart nginx
 }
 
 # --- Main ---
