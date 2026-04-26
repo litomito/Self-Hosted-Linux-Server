@@ -28,3 +28,5 @@ tmp/
 # Python
 venv/
 **/venv/
+
+.state/
