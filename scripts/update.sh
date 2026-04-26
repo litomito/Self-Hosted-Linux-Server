@@ -98,5 +98,29 @@ echo "Current commit:  ${CURRENT_COMMIT_FULL:0:7}"
 echo "Target tag:      $LATEST_TAG"
 echo "Target commit:   ${LATEST_TAG_COMMIT:0:7}"
 
+PREVIOUS_COMMIT="$CURRENT_COMMIT_FULL"
+PREVIOUS_TAG="$CURRENT_TAG"
+
 echo
-echo "No update was performed in this step."
+echo "Saving rollback point:"
+echo "Previous commit: ${PREVIOUS_COMMIT:0:7}"
+
+if [[ -n "$PREVIOUS_TAG" ]]; then
+  echo "Previous tag:    $PREVIOUS_TAG"
+else
+  echo "Previous tag:    none"
+fi
+
+echo
+echo "Checking out target tag: $LATEST_TAG"
+git checkout "$LATEST_TAG"
+
+echo
+echo "Checkout complete ✅"
+echo "Now at:"
+echo "Version: $(current_version)"
+echo "Commit:  $(current_commit)"
+echo "Tag:     $(current_tag)"
+
+echo
+echo "No deploy was performed in this step."
