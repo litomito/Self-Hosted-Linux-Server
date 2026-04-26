@@ -8,6 +8,8 @@ DEPLOY_SCRIPT="$ROOT_DIR/scripts/deploy.sh"
 
 cd "$ROOT_DIR"
 
+START_BRANCH="$(git branch --show-current || true)"
+
 current_version() {
   [[ -f "$VERSION_FILE" ]] && tr -d '[:space:]' < "$VERSION_FILE" || echo "unknown"
 }
@@ -129,6 +131,12 @@ if "$DEPLOY_SCRIPT"; then
   echo
   echo "Platform update deployed ✅"
   echo "Active release should now be: $LATEST_TAG"
+
+  if [[ -n "$START_BRANCH" ]]; then
+    echo
+    echo "Returning to branch: $START_BRANCH"
+    git switch "$START_BRANCH"
+  fi
 else
   echo
   echo "Deploy failed ❌"
