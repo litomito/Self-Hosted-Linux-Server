@@ -123,4 +123,9 @@ echo "Commit:  $(current_commit)"
 echo "Tag:     $(current_tag)"
 
 echo
-echo "No deploy was performed in this step."
+echo "Running deploy for $LATEST_TAG..."
+"$DEPLOY_SCRIPT"
+
+echo
+echo "Platform update deployed ✅"
+echo "Active release should now be: $LATEST_TAG"
