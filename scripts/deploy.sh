@@ -34,11 +34,9 @@ else
   echo "Git commit:     $GIT_COMMIT"
 fi
 
-# Health endpoints via host-port (så vi kan testa slotten utan att Nginx pekar dit)
 BLUE_HEALTH_URL="http://localhost:3001/health"
 GREEN_HEALTH_URL="http://localhost:3002/health"
 
-# Hur länge vi väntar på att den nya slotten ska bli frisk
 MAX_WAIT_SECONDS=30
 SLEEP_SECONDS=2
 
@@ -64,7 +62,6 @@ service_name_for_slot() {
   [[ "$slot" == "blue" ]] && echo "app_blue" || echo "app_green"
 }
 
-# Väntar tills /health svarar 200 (eller tills timeout)
 wait_for_health() {
   local url="$1"
   local waited=0
@@ -72,7 +69,6 @@ wait_for_health() {
   echo "Healthcheck: $url"
 
   while (( waited < MAX_WAIT_SECONDS )); do
-    # -f failar på 4xx/5xx, -s silent, --max-time snabb timeout
     if curl -fsS --max-time 2 "$url" >/dev/null; then
       echo "Health OK ✅"
       return 0
@@ -93,13 +89,10 @@ rollback_inactive() {
   svc="$(service_name_for_slot "$slot")"
 
   echo "Rollback: stopping failed slot ($slot) => service $svc"
-  docker compose -f "$COMPOSE_FILE" stop "$svc" || true
-
-  # Valfritt: ta bort containern helt så nästa deploy blir “clean”
-  docker compose -f "$COMPOSE_FILE" rm -f "$svc" || true
+  APP_VERSION="$APP_VERSION" docker compose -f "$COMPOSE_FILE" stop "$svc" || true
+  APP_VERSION="$APP_VERSION" docker compose -f "$COMPOSE_FILE" rm -f "$svc" || true
 }
 
-# --- Main ---
 ACTIVE="$(active_slot)"
 INACTIVE="$(inactive_slot)"
 INACTIVE_SVC="$(service_name_for_slot "$INACTIVE")"
@@ -109,14 +102,9 @@ echo "Active slot:   $ACTIVE"
 echo "Inactive slot: $INACTIVE"
 echo "Deploying to:  $INACTIVE_SVC"
 
-# 1) Bygg endast den inaktiva slotten (så vi inte rör aktiv container)
-docker compose -f "$COMPOSE_FILE" build "$INACTIVE_SVC"
+APP_VERSION="$APP_VERSION" docker compose -f "$COMPOSE_FILE" build "$INACTIVE_SVC"
+APP_VERSION="$APP_VERSION" docker compose -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$INACTIVE_SVC"
 
-# 2) Starta/recreate endast den inaktiva slotten
-# --no-deps: starta inte om nginx etc
-docker compose -f "$COMPOSE_FILE" up -d --no-deps --force-recreate "$INACTIVE_SVC"
-
-# 3) Vänta på att den nya slotten blir frisk
 if wait_for_health "$INACTIVE_HEALTH"; then
   echo "Switching traffic to $INACTIVE..."
   "$ROOT_DIR/scripts/switch.sh" "$INACTIVE"
