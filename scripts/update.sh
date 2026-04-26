@@ -135,7 +135,7 @@ if "$DEPLOY_SCRIPT"; then
   if [[ -n "$START_BRANCH" ]]; then
     echo
     echo "Returning to branch: $START_BRANCH"
-    git switch "$START_BRANCH"
+    git switch -f "$START_BRANCH"
   fi
 else
   echo
