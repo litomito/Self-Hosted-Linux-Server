@@ -142,12 +142,12 @@ cooldown_ok() {
 
 restart_service() {
   local service="$1"
-  docker compose -f "$COMPOSE_FILE" restart "$service"
+  APP_VERSION="$(platform_version)" docker compose -f "$COMPOSE_FILE" restart "$service"
 }
 
 ensure_service_running() {
   local service="$1"
-  docker compose -f "$COMPOSE_FILE" up -d --no-deps "$service"
+  APP_VERSION="$(platform_version)" docker compose -f "$COMPOSE_FILE" up -d --no-deps "$service"
 }
 
 main() {
