@@ -157,6 +157,40 @@ services:
     command:
       - --config.file=/etc/blackbox_exporter/config.yml
 
+  discord_webhook:
+    build:
+      context: ../../control-api
+    container_name: discord_webhook
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    env_file:
+      - ../../.env
+
+  dashboard:
+    build:
+      context: ../../dashboard
+    container_name: dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - BLUE_HEALTH_URL=http://app_blue:3000/health
+      - GREEN_HEALTH_URL=http://app_green:3000/health
+      - LIVE_HEALTH_URL=http://nginx/health
+      - PROMETHEUS_URL=http://prometheus:9090
+      - INCIDENT_DIR=/home/server/Self-Hosted-Linux-Server/docs/incidents
+      - OS_UPDATE_DIR=/home/server/Self-Hosted-Linux-Server/docs/os-updates
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/server/Self-Hosted-Linux-Server:/home/server/Self-Hosted-Linux-Server
+    depends_on:
+      - app_blue
+      - app_green
+      - nginx
+      - prometheus
+
 volumes:
   prometheus_data:
   grafana_data:
